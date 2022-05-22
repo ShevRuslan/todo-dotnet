@@ -49,6 +49,7 @@ export default defineComponent({
 .wrapper-form {
   width: 100%;
   padding: 15px;
+  max-height: 100px;
   .form {
     display: flex;
     gap: 16px;
