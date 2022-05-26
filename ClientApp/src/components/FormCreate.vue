@@ -30,9 +30,10 @@ export default defineComponent({
       const form = new FormData();
       form.append("name", name.value);
       form.append("content", content.value);
-      form.append("important", important.value);
+      form.append("isImportant", important.value);
+      form.append("isDone", false);
       form.append("image", photo.value);
-      const response = await Api.createTODO(form);
+      await Api.createTODO(form);
     };
     return {
       name,

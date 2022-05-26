@@ -38,6 +38,43 @@ namespace TODOJava.Controllers
         {
             return _todoContext.TodoElements.ToList();
         }
+        [HttpGet("delete/{id}")]
+        public ActionResult Delete(int id)
+        {
+            TodoElement todoElement = _todoContext.TodoElements.Find(id);
+            if(todoElement != null)
+            {
+                _todoContext.TodoElements.Remove(todoElement);
+                _todoContext.SaveChanges();
+            }
+            return Ok();
+             
+        }
+        [HttpPost("changeIsDone")]
+        public ActionResult ChangeIsDone([FromForm]int id, [FromForm] Boolean isDone)
+        {
+            TodoElement todoElement = _todoContext.TodoElements.Find(id);
+            if(todoElement != null)
+            {
+                todoElement.isDone = isDone;
+                _todoContext.SaveChanges();
+            }
+            return Ok();
+        }
+        [HttpPost("edit")]
+        public ActionResult Edit([FromForm] TodoElement todoElement)
+        {
+            TodoElement _todoElement = _todoContext.TodoElements.Find(todoElement.Id);
+            if(_todoElement != null)
+            {
+                _todoElement.name = todoElement.name;
+                _todoElement.content = todoElement.content;
+                _todoElement.isDone = todoElement.isDone;
+                _todoElement.isImportant = todoElement.isImportant;
+                _todoContext.SaveChanges();
+            }
+            return Ok();
+        }
         private string GetUniqueFileName(string fileName)
         {
             fileName = Path.GetFileName(fileName);

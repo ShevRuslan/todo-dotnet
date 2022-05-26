@@ -11,9 +11,12 @@ namespace TODOJava.Models
         public string name { get; set; }
         public string content { get; set; }
         public string? filename { get; set; }
+
         [NotMapped]
         public IFormFile? image { set; get; }
         public string? datecreate { get; set; }
 
+        public bool isImportant { get; set; }
+        public bool isDone { get; set; }
     }
 }
