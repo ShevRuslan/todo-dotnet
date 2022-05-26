@@ -1,44 +1,60 @@
 <template>
-  <q-list separator bordered class="q-mt-md">
+  <q-list separator class="q-mt-md todo-list">
     <q-item
       v-for="element in todoElements"
       :key="element.name"
       v-bind:class="{ important: element.isImportant, isDone: element.isDone }"
+      class="todo-item"
     >
       <q-item-section>
-        <q-item-label lines="1">{{ element.name }}</q-item-label>
-        <q-item-label lines="2">{{ element.content }}</q-item-label>
-        <q-item-label caption>{{ element.datecreate }}</q-item-label>
-      </q-item-section>
-      <q-item-section side>
-        <div class="text-grey-8 q-gutter-xs">
-          <q-btn
-            class="gt-xs"
-            size="12px"
-            flat
-            dense
-            round
-            icon="delete"
-            @click="deleteTodo(element.id)"
-          />
-          <q-btn
-            class="gt-xs"
-            size="12px"
-            flat
-            dense
-            round
-            icon="done"
-            @click="changeIsDone(element.id, !element.isDone)"
-          />
-          <q-btn
-            size="12px"
-            flat
-            dense
-            round
-            icon="edit"
-            @click="openWindow(element)"
-          />
-        </div>
+        <q-item-label v-if="element.filename != null"
+          ><img
+            :src="getImage(element)"
+            style="width: 250px; border-radius: 5px"
+        /></q-item-label>
+        <q-item-label lines="1" style="font-size: 24px; font-weight: bold">{{
+          element.name
+        }}</q-item-label>
+        <q-item-label overline>{{ element.content }}</q-item-label>
+        <q-item-label
+          style="
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 40px;
+          "
+        >
+          <q-item-label caption>{{ element.datecreate }}</q-item-label>
+          <div class="text-grey-8 q-gutter-xs">
+            <q-btn
+              class="gt-xs"
+              size="12px"
+              flat
+              dense
+              round
+              icon="delete"
+              @click="deleteTodo(element.id)"
+            />
+            <q-btn
+              class="gt-xs"
+              size="12px"
+              flat
+              dense
+              round
+              icon="done"
+              @click="changeIsDone(element.id, !element.isDone)"
+            />
+            <q-btn
+              size="12px"
+              flat
+              dense
+              round
+              icon="edit"
+              @click="openWindow(element)"
+            />
+          </div>
+        </q-item-label>
       </q-item-section>
     </q-item>
   </q-list>
@@ -101,25 +117,21 @@ export default {
     let id = ref(0);
 
     onMounted(async () => {
-      const response = await Api.getTodoElement();
-      todoElements.value = response;
+      getElement();
     });
     setInterval(async () => {
-      const response = await Api.getTodoElement();
-      todoElements.value = response;
-    }, 1000);
+      getElement();
+    }, 3000);
     const deleteTodo = async (id) => {
       await Api.deleteTODO(id);
-      const response = await Api.getTodoElement();
-      todoElements.value = response;
+      getElement();
     };
     const changeIsDone = async (id, isDone) => {
       const formData = new FormData();
       formData.append("id", id);
       formData.append("isDone", isDone);
       await Api.changeIsDone(formData);
-      const response = await Api.getTodoElement();
-      todoElements.value = response;
+      getElement();
     };
     const openWindow = async (element) => {
       windowChange.value = true;
@@ -139,8 +151,14 @@ export default {
       form.append("id", id.value);
       await Api.editTodo(form);
       await Api.changeIsDone(formData);
+      getElement();
+    };
+    const getElement = async () => {
       const response = await Api.getTodoElement();
       todoElements.value = response;
+    };
+    const getImage = (element) => {
+      return `http://localhost:7104/uploads/${element.filename}`;
     };
     return {
       todoElements,
@@ -153,6 +171,7 @@ export default {
       important,
       openWindow,
       edit,
+      getImage,
     };
   },
 };
@@ -164,5 +183,15 @@ export default {
 }
 .isDone {
   border: 2px solid green !important;
+}
+.todo-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+.todo-item {
+  width: calc(20% - 15px);
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  text-align: center;
 }
 </style>
