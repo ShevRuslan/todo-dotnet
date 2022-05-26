@@ -27,7 +27,8 @@ namespace TODOJava.Controllers
                 todoElement.image.CopyTo(new FileStream(filePath, FileMode.Create));
                 todoElement.filename = uniqueFileName;
             }
-            string currentDate = DateTime.Now.ToString(); 
+            DateTimeOffset now = (DateTimeOffset)DateTime.UtcNow;
+            string currentDate = now.ToUnixTimeSeconds().ToString(); 
             todoElement.datecreate = currentDate;
             _todoContext.Add(todoElement);
             _todoContext.SaveChanges();
@@ -37,6 +38,17 @@ namespace TODOJava.Controllers
         public List<TodoElement> GetTodoElements()
         {
             return _todoContext.TodoElements.ToList();
+        }
+        [HttpGet("getAllDates")]
+        public List<string> GetAllDates()
+        {
+            var dates = new List<string>();
+            foreach (var todoElement in _todoContext.TodoElements)
+            {
+                dates.Add(todoElement.datecreate);
+            }
+            return dates;
+
         }
         [HttpGet("delete/{id}")]
         public ActionResult Delete(int id)

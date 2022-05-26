@@ -1,8 +1,26 @@
 <template>
+  <q-card class="q-pa-md q-mt-md q-mb-md wrapper-sort-filter">
+    <q-select
+      outlined
+      v-model="sortModel"
+      :options="sortOptions"
+      label="Сортировка"
+      class="sort"
+      dense
+    />
+    <q-select
+      outlined
+      v-model="filterModel"
+      :options="filterOptions"
+      label="Фильтрация"
+      class="filter"
+      dense
+    />
+  </q-card>
   <q-list separator class="q-mt-md todo-list">
     <q-item
       v-for="element in todoElements"
-      :key="element.name"
+      :key="element.id"
       v-bind:class="{ important: element.isImportant, isDone: element.isDone }"
       class="todo-item"
     >
@@ -10,7 +28,7 @@
         <q-item-label v-if="element.filename != null"
           ><img
             :src="getImage(element)"
-            style="width: 250px; border-radius: 5px"
+            style="width: 200px; border-radius: 5px"
         /></q-item-label>
         <q-item-label lines="1" style="font-size: 24px; font-weight: bold">{{
           element.name
@@ -25,7 +43,9 @@
             margin-top: 40px;
           "
         >
-          <q-item-label caption>{{ element.datecreate }}</q-item-label>
+          <q-item-label caption>{{
+            formatDate(element.datecreate)
+          }}</q-item-label>
           <div class="text-grey-8 q-gutter-xs">
             <q-btn
               class="gt-xs"
@@ -103,8 +123,9 @@
 </template>
 
 <script>
-import { defineComponent, ref, onMounted, reactive } from "vue";
+import { defineComponent, ref, onMounted, reactive, watch } from "vue";
 import Api from "src/services/api";
+import { date } from "quasar";
 export default {
   setup() {
     let todoElements = ref([]);
@@ -116,12 +137,103 @@ export default {
     let important = ref(false);
     let id = ref(0);
 
+    let sortModel = ref(null);
+    let sortOptions = [
+      {
+        label: "Сначала новые",
+        value: "new",
+      },
+      {
+        label: "Сначала старые",
+        value: "old",
+      },
+      {
+        label: "Сначала важные",
+        value: "important",
+      },
+      {
+        label: "Сначала сделанные",
+        value: "done",
+      },
+      {
+        label: "Убрать сортировку",
+        value: "removeSort",
+      },
+    ];
+    let filterModel = ref(null);
+    let filterOptions = [
+      {
+        label: "Только важные",
+        value: "important",
+      },
+      {
+        label: "Только сделанные",
+        value: "done",
+      },
+      {
+        label: "Только с фотографиями",
+        value: "photo",
+      },
+      {
+        label: "Сбросить",
+        value: "removeFilter",
+      },
+    ];
+    let defaultTodo = [];
+
+    watch(
+      () => sortModel.value,
+      (current, prev) => {
+        if (defaultTodo.length == 0) {
+          defaultTodo = [...todoElements.value];
+        }
+
+        if (current.value == "important") {
+          todoElements.value.sort((a, b) => b.isImportant - a.isImportant);
+        } else if (current.value == "done") {
+          todoElements.value.sort((a, b) => b.isDone - a.isDone);
+        } else if (current.value == "removeSort") {
+          todoElements.value = [...defaultTodo];
+        } else if (current.value == "new") {
+          todoElements.value.sort((a, b) => b.datecreate - a.datecreate);
+        } else if (current.value == "old") {
+          todoElements.value.sort((a, b) => a.datecreate - b.datecreate);
+        }
+      }
+    );
+    watch(
+      () => filterModel.value,
+      (current, prev) => {
+        if (defaultTodo.length == 0) {
+          defaultTodo = [...todoElements.value];
+        }
+
+        if (current.value == "important") {
+          const filterArray = defaultTodo.filter(
+            (element) => element.isImportant == true
+          );
+          todoElements.value = filterArray;
+        } else if (current.value == "done") {
+          const filterArray = defaultTodo.filter(
+            (element) => element.isDone == true
+          );
+          todoElements.value = filterArray;
+        } else if (current.value == "removeFilter") {
+          todoElements.value = [...defaultTodo];
+        } else if (current.value == "photo") {
+          const filterArray = defaultTodo.filter(
+            (element) => element.filename != null
+          );
+          todoElements.value = filterArray;
+        }
+      }
+    );
     onMounted(async () => {
       getElement();
     });
-    setInterval(async () => {
-      getElement();
-    }, 3000);
+    // setInterval(async () => {
+    //   getElement();
+    // }, 3000);
     const deleteTodo = async (id) => {
       await Api.deleteTODO(id);
       getElement();
@@ -150,7 +262,6 @@ export default {
       form.append("image", photo.value);
       form.append("id", id.value);
       await Api.editTodo(form);
-      await Api.changeIsDone(formData);
       getElement();
     };
     const getElement = async () => {
@@ -159,6 +270,9 @@ export default {
     };
     const getImage = (element) => {
       return `http://localhost:7104/uploads/${element.filename}`;
+    };
+    const formatDate = (timestamp) => {
+      return date.formatDate(timestamp * 1000, "YYYY-DD-MM HH:mm");
     };
     return {
       todoElements,
@@ -172,6 +286,11 @@ export default {
       openWindow,
       edit,
       getImage,
+      sortOptions,
+      sortModel,
+      formatDate,
+      filterModel,
+      filterOptions,
     };
   },
 };
@@ -193,5 +312,13 @@ export default {
   width: calc(20% - 15px);
   border: 2px solid rgba(0, 0, 0, 0.12);
   text-align: center;
+}
+.wrapper-sort-filter {
+  display: flex;
+  gap: 16px;
+  .sort,
+  .filter {
+    width: 400px;
+  }
 }
 </style>
