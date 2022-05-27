@@ -24,11 +24,11 @@ export default {
     const events = ref([]);
     const calendarWindow = ref(false);
     onMounted(async () => {
+      currentDate.value = formatDate(Date.now() / 1000);
       const dates = await Api.getAllDates();
       dates.forEach((date) => {
         events.value.push(formatDate(date));
       });
-      currentDate.value = events.value[0];
     });
     watch(
       () => currentDate.value,

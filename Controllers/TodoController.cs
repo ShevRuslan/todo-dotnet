@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Text.Json;
 using TODOJava.Models;
 
 namespace TODOJava.Controllers
@@ -79,6 +81,15 @@ namespace TODOJava.Controllers
             TodoElement _todoElement = _todoContext.TodoElements.Find(todoElement.Id);
             if(_todoElement != null)
             {
+                if (todoElement.image != null)
+                {
+                    var uniqueFileName = GetUniqueFileName(todoElement.image.FileName);
+                    var uploads = Path.Combine(hostingEnvironment.WebRootPath, "uploads");
+                    var filePath = Path.Combine(uploads, uniqueFileName);
+                    todoElement.image.CopyTo(new FileStream(filePath, FileMode.Create));
+                    _todoElement.filename = uniqueFileName;
+
+                }
                 _todoElement.name = todoElement.name;
                 _todoElement.content = todoElement.content;
                 _todoElement.isDone = todoElement.isDone;
@@ -117,6 +128,44 @@ namespace TODOJava.Controllers
             }
             return statics;
             
+        }
+        [HttpGet("export")] 
+        public ActionResult GetPathToExportFile()
+        {
+            List<TodoElement> todoElements = _todoContext.TodoElements.ToList();
+            string json = System.Text.Json.JsonSerializer.Serialize(todoElements);
+            string path = Path.Combine(hostingEnvironment.WebRootPath, "uploads/export.json");
+            System.IO.File.WriteAllText(path, json);
+            return Ok();
+        }
+        [HttpPost("import")] 
+        public async Task<IActionResult> ImportFile(IFormFile uploadedFile)
+        {
+            var uniqueFileName = uploadedFile.FileName;
+            var uploads = Path.Combine(hostingEnvironment.WebRootPath, "uploads");
+            var filePath = Path.Combine(uploads, uniqueFileName);
+            using (Stream fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await uploadedFile.CopyToAsync(fileStream);
+            }
+
+            string JSON = System.IO.File.ReadAllText(filePath);
+            List<TodoElement> todoElements = JsonConvert.DeserializeObject<List<TodoElement>>(JSON);
+            foreach (var todoElement in todoElements)
+            {
+                _todoContext.TodoElements.Add(new TodoElement { 
+                    content = todoElement.content, 
+                    datecreate = todoElement.datecreate,
+                    isDone = todoElement.isDone,
+                    filename = todoElement.filename,
+                    image = todoElement.image,
+                    isImportant = todoElement.isImportant,
+                    name = todoElement.name,
+                });
+            }
+            _todoContext.SaveChanges();
+            return Ok();
+
         }
         private string GetUniqueFileName(string fileName)
         {

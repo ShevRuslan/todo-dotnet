@@ -51,5 +51,15 @@ class Api {
     const response = await this.getResource(url, null, "GET", null, null);
     return response;
   };
+  exportDB = async () => {
+    let url = "todo/export";
+    const response = await this.getResource(url, null, "GET", null, null);
+    return response;
+  };
+  importDB = async (data) => {
+    let url = "todo/import";
+    const response = await this.getResource(url, data, "POST", null, null);
+    return response;
+  };
 }
 export default new Api();
