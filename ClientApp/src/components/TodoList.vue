@@ -1,5 +1,6 @@
 <template>
   <q-card class="q-pa-md q-mt-md q-mb-md wrapper-sort-filter">
+    <q-input outlined v-model="search" label="Поиск" dense />
     <q-select
       outlined
       v-model="sortModel"
@@ -154,6 +155,8 @@ export default {
       () => store.getters["getCurrentCalendarDay"]
     );
 
+    const search = ref("");
+
     let defaultTodo = [];
 
     let todoElements = ref([]);
@@ -209,6 +212,12 @@ export default {
     ];
 
     watch(
+      () => search.value,
+      (current, prev) => {
+        searchInArray(current);
+      }
+    );
+    watch(
       () => sortModel.value,
       (current, prev) => {
         sortItems(current);
@@ -226,7 +235,19 @@ export default {
     setInterval(async () => {
       getElement();
     }, 1000);
-
+    const searchInArray = (value) => {
+      if (value == "") {
+        todoElements.value = [...defaultTodo];
+        if (filterModel.value != "") filterItems(filterModel.value);
+        if (sortModel.value != "") sortItems(sortModel.value);
+      } else {
+        const arrFind = todoElements.value.filter(
+          (el) =>
+            el.name.indexOf(value) != -1 || el.content.indexOf(value) != -1
+        );
+        todoElements.value = [...arrFind];
+      }
+    };
     const filterItems = (current) => {
       if (current.value == "important") {
         const filterArray = defaultTodo.filter(
@@ -248,6 +269,7 @@ export default {
         );
         todoElements.value = filterArray;
       }
+      if (search.value != "") searchInArray(search.value);
     };
     const sortItems = (current) => {
       todoElements.value = [...defaultTodo];
@@ -265,6 +287,7 @@ export default {
       } else if (current.value == "old") {
         todoElements.value.sort((a, b) => a.datecreate - b.datecreate);
       }
+      if (search.value != "") searchInArray(search.value);
     };
     const deleteTodo = async (id) => {
       await Api.deleteTODO(id);
@@ -300,6 +323,7 @@ export default {
       const response = await Api.getTodoElement();
       todoElements.value = response;
       defaultTodo = [...response];
+      if (search.value != "") searchInArray(search.value);
       if (filterModel.value != "") filterItems(filterModel.value);
       if (sortModel.value != "") sortItems(sortModel.value);
     };
@@ -335,6 +359,7 @@ export default {
       currentCaledanDay,
       formatDateCalendar,
       showAll,
+      search,
     };
   },
 };
