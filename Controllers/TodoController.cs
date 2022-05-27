@@ -87,6 +87,37 @@ namespace TODOJava.Controllers
             }
             return Ok();
         }
+        [HttpGet("getStatics")]
+        public Statics GetStatics()
+        {   
+            Statics statics = new Statics();
+            DateTime baseDate = DateTime.Now;
+            var thisWeekStart = baseDate.AddDays(-(int)baseDate.DayOfWeek);
+            var thisWeekEnd = thisWeekStart.AddDays(7).AddSeconds(-1);
+            long thisWeekStartMill = (long)thisWeekStart.ToUniversalTime().Subtract(
+                                    new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                                    ).TotalMilliseconds;
+            long thisWeekEndMill = (long)thisWeekEnd.ToUniversalTime().Subtract(
+                                    new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                                    ).TotalMilliseconds;
+
+            var TodoListOfWeek = _todoContext.TodoElements.Where(el => (long)Convert.ToDouble(el.datecreate)*1000 >= thisWeekStartMill).ToList();
+            statics.AllOfWeek = TodoListOfWeek.Count();
+            foreach (var todoElement in TodoListOfWeek)
+            {
+                if (todoElement.isImportant) statics.ImportantOfWeek++;
+                if (todoElement.isDone) statics.DoneOfWeek++;
+            }
+            var AllTodoList = _todoContext.TodoElements.ToList();
+            statics.AllTodo = AllTodoList.Count();
+            foreach (var todoElement in AllTodoList)
+            {
+                if (todoElement.isImportant) statics.AllImportant++;
+                if (todoElement.isDone) statics.AllDone++;
+            }
+            return statics;
+            
+        }
         private string GetUniqueFileName(string fileName)
         {
             fileName = Path.GetFileName(fileName);

@@ -46,5 +46,10 @@ class Api {
     const response = await this.getResource(url, null, "GET", null, null);
     return response;
   };
+  getStatics = async () => {
+    let url = "todo/getStatics";
+    const response = await this.getResource(url, null, "GET", null, null);
+    return response;
+  };
 }
 export default new Api();

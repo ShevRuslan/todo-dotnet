@@ -25,6 +25,7 @@
       style="width: 160px"
       @click="showAll()"
     />
+    <Statics />
   </q-card>
   <q-list separator class="q-mt-md todo-list">
     <q-item
@@ -144,9 +145,11 @@ import CalendarVue from "./Calendar.vue";
 import { ref, onMounted, computed, watch } from "vue";
 import Api from "src/services/api";
 import { date } from "quasar";
+import Statics from "./Statics.vue";
 export default {
   components: {
     CalendarVue,
+    Statics,
   },
   setup() {
     const store = useStore();
