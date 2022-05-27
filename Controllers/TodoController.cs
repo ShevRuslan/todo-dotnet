@@ -167,6 +167,13 @@ namespace TODOJava.Controllers
             return Ok();
 
         }
+        [HttpGet("deleteAll")]
+        public ActionResult DeleteAll()
+        {
+            _todoContext.TodoElements.RemoveRange(_todoContext.TodoElements);
+            _todoContext.SaveChanges();
+            return Ok();
+        }
         private string GetUniqueFileName(string fileName)
         {
             fileName = Path.GetFileName(fileName);

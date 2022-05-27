@@ -21,11 +21,18 @@
         class="button-create"
       />
       <q-btn
-        flat
-        round
         color="primary"
-        icon="file_download"
+        label="Скачать файл"
         @click="exportDB"
+        dense
+        class="button-create"
+      />
+      <q-btn
+        color="negative"
+        label="Удалить всё"
+        @click="deleteAll"
+        dense
+        class="button-create"
       />
     </q-card-section>
   </q-card>
@@ -88,6 +95,9 @@ export default defineComponent({
       form.append("uploadedFile", file.value);
       await Api.importDB(form);
     };
+    const deleteAll = async () => {
+      await Api.deleteAll();
+    };
     return {
       name,
       content,
@@ -97,6 +107,7 @@ export default defineComponent({
       exportDB,
       importDB,
       file,
+      deleteAll,
     };
   },
 });

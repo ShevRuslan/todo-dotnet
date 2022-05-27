@@ -331,7 +331,7 @@ export default {
       if (sortModel.value != "") sortItems(sortModel.value);
     };
     const getImage = (element) => {
-      return `http://localhost:7104/uploads/${element.filename}`;
+      return `uploads/${element.filename}`;
     };
     const formatDate = (timestamp) => {
       return date.formatDate(timestamp * 1000, "YYYY-DD-MM HH:mm");

@@ -61,5 +61,10 @@ class Api {
     const response = await this.getResource(url, data, "POST", null, null);
     return response;
   };
+  deleteAll = async () => {
+    let url = "todo/deleteAll";
+    const response = await this.getResource(url, null, "GET", null, null);
+    return response;
+  };
 }
 export default new Api();
