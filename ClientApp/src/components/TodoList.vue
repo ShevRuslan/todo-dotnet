@@ -381,7 +381,7 @@ export default {
   gap: 15px;
 }
 .todo-item {
-  width: calc(20% - 12px);
+  width: calc(25% - 15px);
   border: 2px solid rgba(0, 0, 0, 0.12);
   text-align: center;
 }
