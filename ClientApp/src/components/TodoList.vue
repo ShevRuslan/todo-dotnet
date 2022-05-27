@@ -16,6 +16,14 @@
       class="filter"
       dense
     />
+    <CalendarVue />
+    <q-btn
+      color="primary"
+      label="Показать все"
+      dense
+      style="width: 160px"
+      @click="showAll()"
+    />
   </q-card>
   <q-list separator class="q-mt-md todo-list">
     <q-item
@@ -23,6 +31,10 @@
       :key="element.id"
       v-bind:class="{ important: element.isImportant, isDone: element.isDone }"
       class="todo-item"
+      v-show="
+        formatDateCalendar(element.datecreate) == currentCaledanDay ||
+        currentCaledanDay == ''
+      "
     >
       <q-item-section>
         <q-item-label v-if="element.filename != null"
@@ -126,11 +138,22 @@
 </template>
 
 <script>
-import { defineComponent, ref, onMounted, reactive, watch } from "vue";
+import { useStore } from "vuex";
+import CalendarVue from "./Calendar.vue";
+import { ref, onMounted, computed, watch } from "vue";
 import Api from "src/services/api";
 import { date } from "quasar";
 export default {
+  components: {
+    CalendarVue,
+  },
   setup() {
+    const store = useStore();
+
+    const currentCaledanDay = computed(
+      () => store.getters["getCurrentCalendarDay"]
+    );
+
     let defaultTodo = [];
 
     let todoElements = ref([]);
@@ -142,7 +165,7 @@ export default {
     let important = ref(false);
     let id = ref(0);
 
-    let sortModel = ref(null);
+    let sortModel = ref("");
     let sortOptions = [
       {
         label: "Сначала новые",
@@ -161,11 +184,11 @@ export default {
         value: "done",
       },
       {
-        label: "Убрать сортировку",
+        label: "Сбросить",
         value: "removeSort",
       },
     ];
-    let filterModel = ref(null);
+    let filterModel = ref("");
     let filterOptions = [
       {
         label: "Только важные",
@@ -200,15 +223,11 @@ export default {
     onMounted(async () => {
       getElement();
     });
-    // setInterval(async () => {
-    //   getElement();
-    // }, 3000);
+    setInterval(async () => {
+      getElement();
+    }, 1000);
 
     const filterItems = (current) => {
-      console.log(current);
-      if (defaultTodo.length == 0) {
-        defaultTodo = [...todoElements.value];
-      }
       if (current.value == "important") {
         const filterArray = defaultTodo.filter(
           (element) => element.isImportant == true
@@ -229,21 +248,18 @@ export default {
         );
         todoElements.value = filterArray;
       }
-      if (sortModel.value != null) sortItems(sortModel.value);
     };
     const sortItems = (current) => {
-      if (defaultTodo.length == 0) {
-        defaultTodo = [...todoElements.value];
-      }
-
+      todoElements.value = [...defaultTodo];
+      if (filterModel.value != "") filterItems(filterModel.value);
       if (current.value == "important") {
         todoElements.value.sort((a, b) => b.isImportant - a.isImportant);
       } else if (current.value == "done") {
         todoElements.value.sort((a, b) => b.isDone - a.isDone);
       } else if (current.value == "removeSort") {
+        todoElements.value = [...defaultTodo];
         sortModel.value = "";
         filterModel.value = "";
-        todoElements.value = [...defaultTodo];
       } else if (current.value == "new") {
         todoElements.value.sort((a, b) => b.datecreate - a.datecreate);
       } else if (current.value == "old") {
@@ -283,15 +299,21 @@ export default {
     const getElement = async () => {
       const response = await Api.getTodoElement();
       todoElements.value = response;
-      defaultTodo = response;
-      if (sortModel.value != null) sortItems(sortModel.value);
-      if (filterModel.value != null) filterItems(filterModel.value);
+      defaultTodo = [...response];
+      if (filterModel.value != "") filterItems(filterModel.value);
+      if (sortModel.value != "") sortItems(sortModel.value);
     };
     const getImage = (element) => {
       return `http://localhost:7104/uploads/${element.filename}`;
     };
     const formatDate = (timestamp) => {
       return date.formatDate(timestamp * 1000, "YYYY-DD-MM HH:mm");
+    };
+    const formatDateCalendar = (timestamp) => {
+      return date.formatDate(timestamp * 1000, "YYYY/MM/DD");
+    };
+    const showAll = () => {
+      store.commit("addCurrentCalendarDay", "");
     };
     return {
       todoElements,
@@ -310,6 +332,9 @@ export default {
       formatDate,
       filterModel,
       filterOptions,
+      currentCaledanDay,
+      formatDateCalendar,
+      showAll,
     };
   },
 };

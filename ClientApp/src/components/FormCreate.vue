@@ -34,6 +34,10 @@ export default defineComponent({
       form.append("isDone", false);
       form.append("image", photo.value);
       await Api.createTODO(form);
+      name.value = "";
+      content.value = "";
+      important.value = false;
+      photo.value = "";
     };
     return {
       name,
