@@ -54,6 +54,7 @@
               dense
               round
               icon="delete"
+              color="negative"
               @click="deleteTodo(element.id)"
             />
             <q-btn
@@ -63,6 +64,7 @@
               dense
               round
               icon="done"
+              color="positive"
               @click="changeIsDone(element.id, !element.isDone)"
             />
             <q-btn
@@ -71,6 +73,7 @@
               dense
               round
               icon="edit"
+              color="primary"
               @click="openWindow(element)"
             />
           </div>
@@ -128,6 +131,8 @@ import Api from "src/services/api";
 import { date } from "quasar";
 export default {
   setup() {
+    let defaultTodo = [];
+
     let todoElements = ref([]);
     let windowChange = ref(false);
 
@@ -179,53 +184,17 @@ export default {
         value: "removeFilter",
       },
     ];
-    let defaultTodo = [];
 
     watch(
       () => sortModel.value,
       (current, prev) => {
-        if (defaultTodo.length == 0) {
-          defaultTodo = [...todoElements.value];
-        }
-
-        if (current.value == "important") {
-          todoElements.value.sort((a, b) => b.isImportant - a.isImportant);
-        } else if (current.value == "done") {
-          todoElements.value.sort((a, b) => b.isDone - a.isDone);
-        } else if (current.value == "removeSort") {
-          todoElements.value = [...defaultTodo];
-        } else if (current.value == "new") {
-          todoElements.value.sort((a, b) => b.datecreate - a.datecreate);
-        } else if (current.value == "old") {
-          todoElements.value.sort((a, b) => a.datecreate - b.datecreate);
-        }
+        sortItems(current);
       }
     );
     watch(
       () => filterModel.value,
       (current, prev) => {
-        if (defaultTodo.length == 0) {
-          defaultTodo = [...todoElements.value];
-        }
-
-        if (current.value == "important") {
-          const filterArray = defaultTodo.filter(
-            (element) => element.isImportant == true
-          );
-          todoElements.value = filterArray;
-        } else if (current.value == "done") {
-          const filterArray = defaultTodo.filter(
-            (element) => element.isDone == true
-          );
-          todoElements.value = filterArray;
-        } else if (current.value == "removeFilter") {
-          todoElements.value = [...defaultTodo];
-        } else if (current.value == "photo") {
-          const filterArray = defaultTodo.filter(
-            (element) => element.filename != null
-          );
-          todoElements.value = filterArray;
-        }
+        filterItems(current);
       }
     );
     onMounted(async () => {
@@ -234,6 +203,53 @@ export default {
     // setInterval(async () => {
     //   getElement();
     // }, 3000);
+
+    const filterItems = (current) => {
+      console.log(current);
+      if (defaultTodo.length == 0) {
+        defaultTodo = [...todoElements.value];
+      }
+      if (current.value == "important") {
+        const filterArray = defaultTodo.filter(
+          (element) => element.isImportant == true
+        );
+        todoElements.value = filterArray;
+      } else if (current.value == "done") {
+        const filterArray = defaultTodo.filter(
+          (element) => element.isDone == true
+        );
+        todoElements.value = filterArray;
+      } else if (current.value == "removeFilter") {
+        todoElements.value = [...defaultTodo];
+        sortModel.value = "";
+        filterModel.value = "";
+      } else if (current.value == "photo") {
+        const filterArray = defaultTodo.filter(
+          (element) => element.filename != null
+        );
+        todoElements.value = filterArray;
+      }
+      if (sortModel.value != null) sortItems(sortModel.value);
+    };
+    const sortItems = (current) => {
+      if (defaultTodo.length == 0) {
+        defaultTodo = [...todoElements.value];
+      }
+
+      if (current.value == "important") {
+        todoElements.value.sort((a, b) => b.isImportant - a.isImportant);
+      } else if (current.value == "done") {
+        todoElements.value.sort((a, b) => b.isDone - a.isDone);
+      } else if (current.value == "removeSort") {
+        sortModel.value = "";
+        filterModel.value = "";
+        todoElements.value = [...defaultTodo];
+      } else if (current.value == "new") {
+        todoElements.value.sort((a, b) => b.datecreate - a.datecreate);
+      } else if (current.value == "old") {
+        todoElements.value.sort((a, b) => a.datecreate - b.datecreate);
+      }
+    };
     const deleteTodo = async (id) => {
       await Api.deleteTODO(id);
       getElement();
@@ -243,7 +259,7 @@ export default {
       formData.append("id", id);
       formData.append("isDone", isDone);
       await Api.changeIsDone(formData);
-      getElement();
+      await getElement();
     };
     const openWindow = async (element) => {
       windowChange.value = true;
@@ -267,6 +283,9 @@ export default {
     const getElement = async () => {
       const response = await Api.getTodoElement();
       todoElements.value = response;
+      defaultTodo = response;
+      if (sortModel.value != null) sortItems(sortModel.value);
+      if (filterModel.value != null) filterItems(filterModel.value);
     };
     const getImage = (element) => {
       return `http://localhost:7104/uploads/${element.filename}`;
@@ -309,7 +328,7 @@ export default {
   gap: 15px;
 }
 .todo-item {
-  width: calc(20% - 15px);
+  width: calc(20% - 12px);
   border: 2px solid rgba(0, 0, 0, 0.12);
   text-align: center;
 }
